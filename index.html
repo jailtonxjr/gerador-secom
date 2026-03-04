@@ -88,7 +88,7 @@
 <body>
 
 <div class="container">
-    <div class="emoji" style="font-size: 50px;">🥳</div>
+    <div class="emoji" style="font-size: 50px;">✨</div>
     <h1>Gerador de Artes SECOM</h1>
 
     <div class="input-group">
@@ -130,7 +130,6 @@
     }
 
     async function processarArte() {
-        // Pegamos os valores e formatamos imediatamente
         const nomeBruto = document.getElementById('nome').value;
         const cargoBruto = document.getElementById('cargo').value;
         
@@ -146,7 +145,9 @@
         const canvas = document.getElementById('motorCanvas');
         const ctx = canvas.getContext('2d');
 
+        // 1. Configuração do Template com Correção de Segurança (CORS)
         const imgTemplate = new Image();
+        imgTemplate.crossOrigin = "anonymous"; // Resolve o erro SecurityError: Tainted canvases
         imgTemplate.src = 'template.png'; 
 
         imgTemplate.onload = async () => {
@@ -173,19 +174,25 @@
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
             
-            // Nome formatado
-            ctx.font = "bold 60px Poppins, Segoe UI, sans-serif";
+            // Nome
+            ctx.font = "bold 50px Poppins, Segoe UI, sans-serif";
             ctx.fillText(nome, 540, 1178);
 
-            // Cargo formatado
+            // Cargo
             ctx.font = "34px Poppins, Segoe UI, sans-serif";
             ctx.fillText(cargo, 540, 1240);
 
-            const dataURL = canvas.toDataURL("image/png");
-            document.getElementById('resultado-final').src = dataURL;
-            document.getElementById('link-download').href = dataURL;
-            document.getElementById('preview-container').style.display = 'block';
-            window.scrollTo(0, document.body.scrollHeight);
+            // 5. Exibir Resultado e habilitar download
+            try {
+                const dataURL = canvas.toDataURL("image/png");
+                document.getElementById('resultado-final').src = dataURL;
+                document.getElementById('link-download').href = dataURL;
+                document.getElementById('preview-container').style.display = 'block';
+                window.scrollTo(0, document.body.scrollHeight);
+            } catch (e) {
+                console.error("Erro ao gerar imagem final: ", e);
+                alert("Erro de segurança do navegador. Certifique-se de estar usando o link do GitHub Pages.");
+            }
         };
     }
 
