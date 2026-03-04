@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador SECOM Pro - JS Edition</title>
+    <title>Gerador de Artes</title>
     <style>
         /* CSS ESTILO GEMINI */
         body {
@@ -163,12 +163,12 @@
             ctx.textAlign = "center";
             
             // Nome - Aumentado para 70px
-            ctx.font = "bold 70px Poppins, Segoe UI, sans-serif";
+            ctx.font = "bold 65px Poppins, Segoe UI, sans-serif";
             ctx.fillText(nome, 540, 1175);
 
             // Cargo
-            ctx.font = "34px Poppins, Segoe UI, sans-serif";
-            ctx.fillText(cargo, 540, 1250); // Ajustado levemente para baixo devido ao nome maior
+            ctx.font = "40px Poppins, Segoe UI, sans-serif";
+            ctx.fillText(cargo, 540, 1255); // Ajustado levemente para baixo devido ao nome maior
 
             try {
                 const dataURL = canvas.toDataURL("image/png");
@@ -211,4 +211,5 @@
 
 </body>
 </html>
+
 
