@@ -45,7 +45,8 @@
 
         input:focus { border-color: #4285f4; outline: none; }
 
-        .btn-gerar {
+        /* Estilo unificado para os botões */
+        .btn-acao {
             background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
             border: none;
             padding: 16px;
@@ -58,9 +59,12 @@
             margin-top: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             transition: transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            box-sizing: border-box;
         }
 
-        .btn-gerar:hover { transform: scale(1.02); }
+        .btn-acao:hover { transform: scale(1.02); }
 
         canvas { display: none; } 
 
@@ -70,18 +74,6 @@
             width: 100%;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .btn-download {
-            background: #ffffff10;
-            border: 1px solid #ffffff20;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 15px;
-            font-size: 14px;
         }
     </style>
 </head>
@@ -106,18 +98,17 @@
         <input type="file" id="foto-input" accept="image/*">
     </div>
 
-    <button class="btn-gerar" onclick="processarArte()">CRIAR ARTE AGORA</button>
+    <button class="btn-acao" onclick="processarArte()">CRIAR ARTE AGORA</button>
 
     <div id="preview-container">
         <img id="resultado-final" src="" alt="Arte Final">
-        <a id="link-download" class="btn-download" download="aniversariante.png">📥 Baixar Imagem</a>
+        <a id="link-download" class="btn-acao" download="aniversariante.png">📥 BAIXAR IMAGEM</a>
     </div>
 
     <canvas id="motorCanvas" width="1080" height="1920"></canvas>
 </div>
 
 <script>
-    // FUNÇÃO PARA FORMATAR TEXTO (Primeira Letra Maiúscula + Exceções)
     function formatarTexto(texto) {
         if (!texto) return "";
         const excecoes = ['de', 'da', 'do', 'dos', 'das', 'e', 'em', 'no', 'na'];
@@ -138,30 +129,27 @@
         const fotoInput = document.getElementById('foto-input').files[0];
         
         if(!nome || !cargo || !fotoInput) {
-            alert("Preencha todos os campos, amigão!");
+            alert("Preencha todos os campos!");
             return;
         }
 
         const canvas = document.getElementById('motorCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 1. Configuração do Template com Correção de Segurança (CORS)
         const imgTemplate = new Image();
-        imgTemplate.crossOrigin = "anonymous"; // Resolve o erro SecurityError: Tainted canvases
+        imgTemplate.crossOrigin = "anonymous"; 
         imgTemplate.src = 'template.png'; 
 
         imgTemplate.onload = async () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const imgFoto = await carregarImagem(fotoInput);
-            
             const tamanhoAlvo = 995;
             const coordsCrop = calcularCenterCrop(imgFoto, tamanhoAlvo);
 
             ctx.save();
             ctx.translate(35 + (tamanhoAlvo/2), 275 + (tamanhoAlvo/2)); 
             ctx.rotate(-4 * Math.PI / 180); 
-            
             ctx.drawImage(
                 imgFoto, 
                 coordsCrop.x, coordsCrop.y, coordsCrop.width, coordsCrop.height, 
@@ -174,15 +162,14 @@
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
             
-            // Nome
+            // Nome - Aumentado para 70px
             ctx.font = "bold 70px Poppins, Segoe UI, sans-serif";
             ctx.fillText(nome, 540, 1178);
 
             // Cargo
             ctx.font = "34px Poppins, Segoe UI, sans-serif";
-            ctx.fillText(cargo, 540, 1240);
+            ctx.fillText(cargo, 540, 1250); // Ajustado levemente para baixo devido ao nome maior
 
-            // 5. Exibir Resultado e habilitar download
             try {
                 const dataURL = canvas.toDataURL("image/png");
                 document.getElementById('resultado-final').src = dataURL;
@@ -190,8 +177,8 @@
                 document.getElementById('preview-container').style.display = 'block';
                 window.scrollTo(0, document.body.scrollHeight);
             } catch (e) {
-                console.error("Erro ao gerar imagem final: ", e);
-                alert("Erro de segurança do navegador. Certifique-se de estar usando o link do GitHub Pages.");
+                console.error(e);
+                alert("Erro ao gerar imagem. Use o link do GitHub Pages.");
             }
         };
     }
@@ -211,17 +198,12 @@
     function calcularCenterCrop(img, targetSize) {
         let x, y, width, height;
         const aspect = img.width / img.height;
-        
         if (aspect > 1) { 
-            height = img.height;
-            width = img.height;
-            x = (img.width - img.height) / 2;
-            y = 0;
+            height = img.height; width = img.height;
+            x = (img.width - img.height) / 2; y = 0;
         } else { 
-            width = img.width;
-            height = img.width;
-            x = 0;
-            y = (img.height - img.width) / 2;
+            width = img.width; height = img.width;
+            x = 0; y = (img.height - img.width) / 2;
         }
         return { x, y, width, height };
     }
@@ -229,5 +211,3 @@
 
 </body>
 </html>
-
-
