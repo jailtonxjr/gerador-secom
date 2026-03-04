@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Artes</title>
+    <title>Gerador SECOM Pro - JS Edition</title>
     <style>
         /* CSS ESTILO GEMINI */
         body {
@@ -45,7 +45,6 @@
 
         input:focus { border-color: #4285f4; outline: none; }
 
-        /* Estilo unificado para os botões */
         .btn-acao {
             background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
             border: none;
@@ -64,7 +63,35 @@
             box-sizing: border-box;
         }
 
-        .btn-acao:hover { transform: scale(1.02); }
+        .btn-acao:hover:not(:disabled) { transform: scale(1.02); }
+
+        /* Estilo do estado de carregamento */
+        .btn-acao:disabled {
+            background: #444;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #status-loading {
+            display: none;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #4285f4;
+            font-weight: 500;
+        }
+
+        /* Animação simples de pulso */
+        .loading-dots:after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ' .'; }
+            40% { content: ' ..'; }
+            60% { content: ' ...'; }
+            80%, 100% { content: ''; }
+        }
 
         canvas { display: none; } 
 
@@ -80,7 +107,7 @@
 <body>
 
 <div class="container">
-    <div class="emoji" style="font-size: 60px;"> 🥳</div>
+    <div class="emoji" style="font-size: 50px;">✨</div>
     <h1>Gerador de Artes SECOM</h1>
 
     <div class="input-group">
@@ -98,7 +125,9 @@
         <input type="file" id="foto-input" accept="image/*">
     </div>
 
-    <button class="btn-acao" onclick="processarArte()">CRIAR ARTE AGORA</button>
+    <button id="btn-gerar" class="btn-acao" onclick="processarArte()">CRIAR ARTE AGORA</button>
+    
+    <div id="status-loading">Processando sua arte<span class="loading-dots"></span></div>
 
     <div id="preview-container">
         <img id="resultado-final" src="" alt="Arte Final">
@@ -113,9 +142,7 @@
         if (!texto) return "";
         const excecoes = ['de', 'da', 'do', 'dos', 'das', 'e', 'em', 'no', 'na'];
         return texto.toLowerCase().split(' ').map(palavra => {
-            if (excecoes.includes(palavra) && palavra !== "") {
-                return palavra;
-            }
+            if (excecoes.includes(palavra) && palavra !== "") return palavra;
             return palavra.charAt(0).toUpperCase() + palavra.slice(1);
         }).join(' ');
     }
@@ -123,16 +150,24 @@
     async function processarArte() {
         const nomeBruto = document.getElementById('nome').value;
         const cargoBruto = document.getElementById('cargo').value;
-        
-        const nome = formatarTexto(nomeBruto);
-        const cargo = formatarTexto(cargoBruto);
         const fotoInput = document.getElementById('foto-input').files[0];
         
-        if(!nome || !cargo || !fotoInput) {
+        if(!nomeBruto || !cargoBruto || !fotoInput) {
             alert("Preencha todos os campos!");
             return;
         }
 
+        // --- INÍCIO DO CARREGAMENTO ---
+        const btnGerar = document.getElementById('btn-gerar');
+        const statusLoading = document.getElementById('status-loading');
+        
+        btnGerar.disabled = true; // Desativa o botão para evitar cliques duplos
+        btnGerar.innerText = "GERANDO...";
+        statusLoading.style.display = "block"; // Mostra o texto de carregamento
+
+        const nome = formatarTexto(nomeBruto);
+        const cargo = formatarTexto(cargoBruto);
+        
         const canvas = document.getElementById('motorCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -141,44 +176,50 @@
         imgTemplate.src = 'template.png'; 
 
         imgTemplate.onload = async () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const imgFoto = await carregarImagem(fotoInput);
-            const tamanhoAlvo = 995;
-            const coordsCrop = calcularCenterCrop(imgFoto, tamanhoAlvo);
-
-            ctx.save();
-            ctx.translate(35 + (tamanhoAlvo/2), 275 + (tamanhoAlvo/2)); 
-            ctx.rotate(-4 * Math.PI / 180); 
-            ctx.drawImage(
-                imgFoto, 
-                coordsCrop.x, coordsCrop.y, coordsCrop.width, coordsCrop.height, 
-                -tamanhoAlvo/2, -tamanhoAlvo/2, tamanhoAlvo, tamanhoAlvo 
-            );
-            ctx.restore();
-
-            ctx.drawImage(imgTemplate, 0, 0);
-
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            
-            // Nome - Aumentado para 70px
-            ctx.font = "bold 65px Poppins, Segoe UI, sans-serif";
-            ctx.fillText(nome, 540, 1175);
-
-            // Cargo
-            ctx.font = "40px Poppins, Segoe UI, sans-serif";
-            ctx.fillText(cargo, 540, 1255); // Ajustado levemente para baixo devido ao nome maior
-
             try {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const imgFoto = await carregarImagem(fotoInput);
+                const tamanhoAlvo = 995;
+                const coordsCrop = calcularCenterCrop(imgFoto, tamanhoAlvo);
+
+                ctx.save();
+                ctx.translate(35 + (tamanhoAlvo/2), 275 + (tamanhoAlvo/2)); 
+                ctx.rotate(-4 * Math.PI / 180); 
+                ctx.drawImage(
+                    imgFoto, 
+                    coordsCrop.x, coordsCrop.y, coordsCrop.width, coordsCrop.height, 
+                    -tamanhoAlvo/2, -tamanhoAlvo/2, tamanhoAlvo, tamanhoAlvo 
+                );
+                ctx.restore();
+
+                ctx.drawImage(imgTemplate, 0, 0);
+
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.font = "bold 70px Poppins, Segoe UI, sans-serif";
+                ctx.fillText(nome, 540, 1178);
+
+                ctx.font = "40px Poppins, Segoe UI, sans-serif";
+                ctx.fillText(cargo, 540, 1245);
+
                 const dataURL = canvas.toDataURL("image/png");
                 document.getElementById('resultado-final').src = dataURL;
                 document.getElementById('link-download').href = dataURL;
                 document.getElementById('preview-container').style.display = 'block';
+                
+                // --- FIM DO CARREGAMENTO ---
+                btnGerar.disabled = false;
+                btnGerar.innerText = "CRIAR ARTE AGORA";
+                statusLoading.style.display = "none";
+                
                 window.scrollTo(0, document.body.scrollHeight);
             } catch (e) {
                 console.error(e);
-                alert("Erro ao gerar imagem. Use o link do GitHub Pages.");
+                alert("Erro ao gerar imagem.");
+                btnGerar.disabled = false;
+                btnGerar.innerText = "CRIAR ARTE AGORA";
+                statusLoading.style.display = "none";
             }
         };
     }
@@ -211,5 +252,3 @@
 
 </body>
 </html>
-
-
